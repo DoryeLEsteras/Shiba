@@ -1,3 +1,6 @@
+from typing import List
+import numpy as np
+
 # We need to discuss what Riku needs from the old WF order file. Fermi and hr file will be readed via parser
 def extract_input_information(file_name:str) -> List:
     with open(file_name) as input_file:
@@ -24,4 +27,9 @@ def extract_input_information(file_name:str) -> List:
 if __name__ == '__main__':
     kpoints_rel,kpoints_cart,degeneracies = \
                     extract_input_information('1Fe_centreconf.up.wout')
-    print(kpoints_rel,kpoints_cart,degeneracies)
+    print('kpoints (relative)')
+    print(kpoints_rel)
+    print('\n kpoints (cartesian)')
+    print(kpoints_cart)
+    print('\n degeneracies')
+    print(degeneracies)
