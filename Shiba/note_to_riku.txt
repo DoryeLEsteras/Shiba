@@ -1,0 +1,5 @@
+Hey Riku!
+
+You can use this function to extract the information from the .wout files (outputs of wannier), just the Fermi is missing (I think is better if it is directly introduced by the user). To obtain the Fermi
+you can use "grep 'Fermi' *.scf.out" command, which extracts the Fermi from the output of QuantumEspresso. With this, just the order of Wannier functions is necessary, and this is indicated in the readme.txt
+files in each tutorial.
