@@ -1,7 +1,7 @@
 from Shiba.basic_functions import logger,cell
 from dataclasses import dataclass, field
 import numpy as np
-
+import os
 @dataclass
 class WannierHamiltonian:
       norb: int = 0
@@ -15,20 +15,18 @@ class WannierHamiltonian:
       melsdn: np.ndarray = np.array([])
       blocks: int = 0
 
-      def mode_detector(self,hfile):
-          dim = len(hfile)
-          if dim == 1:
+      def mode_detector(self,up_h,down_h,noncolin_h):
+          if up_h == '' and down_h == '' and noncolin_h != '':
              self.calculation_mode = 1
-          elif dim == 2:
+          elif up_h != '' and down_h != '' and noncolin_h == '':
              self.calculation_mode = 2
           else:
-             logger('\nIncompatible number of input files, exiting.' + '\n')
+             logger('\nIncompatible number of Hamiltonian files, exiting.' + '\n')
 
-      def read_wannier_info(self,hfile,nc):
-          self.mode_detector(hfile)
+      def read_wannier_info(self,input_dir,up_h,down_h,noncolin_h,nc):
+          self.mode_detector(up_h,down_h,noncolin_h)
           if(self.calculation_mode == 1):
-            hfile = str(hfile[0])
-            print(hfile)
+            hfile = os.path.join(input_dir,noncolin_h)
             with open(hfile) as f:
                   for row, line in enumerate(f):
                       if(row==0):
@@ -54,8 +52,8 @@ class WannierHamiltonian:
                   self.blocks+=1
             logger('Full Hamiltonian size:\t' + str((self.blocks*4*(self.norb//2))) + 'x' + str((self.blocks*4*(self.norb//2))) + '\n\n')
           elif(self.calculation_mode == 2):
-            wfileup = str(hfile[1])
-            wfiledn = str(hfile[0])
+            wfileup = os.path.join(input_dir,up_h)
+            wfiledn = os.path.join(input_dir,down_h)
             with open(wfiledn) as f:
                 for row, line in enumerate(f):
                     if(row==0):
