@@ -15,18 +15,18 @@ class WannierHamiltonian:
       melsdn: np.ndarray = np.array([])
       blocks: int = 0
 
-      def mode_detector(self,up_h,down_h,noncolin_h):
-          if up_h == '' and down_h == '' and noncolin_h != '':
+      def mode_detector(self,Parameters):
+          if Parameters.up_h == '' and Parameters.down_h == '' and Parameters.noncolin_h != '':
              self.calculation_mode = 1
-          elif up_h != '' and down_h != '' and noncolin_h == '':
+          elif Parameters.up_h != '' and Parameters.down_h != '' and Parameters.noncolin_h == '':
              self.calculation_mode = 2
           else:
              logger('\nIncompatible number of Hamiltonian files, exiting.' + '\n')
 
-      def read_wannier_info(self,input_dir,up_h,down_h,noncolin_h,nc):
-          self.mode_detector(up_h,down_h,noncolin_h)
+      def read_wannier_info(self,Parameters):
+          self.mode_detector(Parameters)
           if(self.calculation_mode == 1):
-            hfile = os.path.join(input_dir,noncolin_h)
+            hfile = os.path.join(Parameters.input_dir,Parameters.noncolin_h)
             with open(hfile) as f:
                   for row, line in enumerate(f):
                       if(row==0):
@@ -46,14 +46,14 @@ class WannierHamiltonian:
             for i in range(len(self.degs)):
                 invdegs[i] = 1.0/self.degs[i]
             logger('(Reciprocal grid:\t' + str(int(np.sum(invdegs))) + ')' + '\n')
-            logger('Depth of WS overlaps:\t' + str(nc) + '\n')
+            logger('Depth of WS overlaps:\t' + str(Parameters.nc) + '\n')
             for idx in range(self.nws):
-                if(cell(self.mels[idx*self.norb**2,0],self.mels[idx*self.norb**2,1],self.mels[idx*self.norb**2,2])<=nc):
+                if(cell(self.mels[idx*self.norb**2,0],self.mels[idx*self.norb**2,1],self.mels[idx*self.norb**2,2])<=Parameters.nc):
                   self.blocks+=1
             logger('Full Hamiltonian size:\t' + str((self.blocks*4*(self.norb//2))) + 'x' + str((self.blocks*4*(self.norb//2))) + '\n\n')
           elif(self.calculation_mode == 2):
-            wfileup = os.path.join(input_dir,up_h)
-            wfiledn = os.path.join(input_dir,down_h)
+            wfileup = os.path.join(Parameters.input_dir,Parameters.up_h)
+            wfiledn = os.path.join(Parameters.input_dir,Parameters.down_h)
             with open(wfiledn) as f:
                 for row, line in enumerate(f):
                     if(row==0):
@@ -82,9 +82,9 @@ class WannierHamiltonian:
             logger('\nWannier orbitals:\t' + str(self.norbdn)+"+"+str(self.norbup)+"="+str(self.norbdn+self.norbup) + '\n')
             logger('Wigner-Seitz cells:\t' + str(self.nws) + '\n')
             logger('(Reciprocal grid:\t' + str(int(np.sum(invdegs))) + ')' + '\n')
-            logger('Depth of WS overlaps:\t' + str(nc) + '\n')
+            logger('Depth of WS overlaps:\t' + str(Parameters.nc) + '\n')
             self.norb=self.norbdn+self.norbup
             for idx in range(self.nws):
-                if(cell(self.melsdn[idx*self.norbdn**2,0],self.melsdn[idx*self.norbdn**2,1],self.melsdn[idx*self.norbdn**2,2])<=nc):
+                if(cell(self.melsdn[idx*self.norbdn**2,0],self.melsdn[idx*self.norbdn**2,1],self.melsdn[idx*self.norbdn**2,2])<=Parameters.nc):
                    self.blocks+=1
             logger('Full Hamiltonian size:\t' + str((self.blocks*4*(self.norb//2))) + 'x' + str((self.blocks*4*(self.norb//2))) + '\n\n')

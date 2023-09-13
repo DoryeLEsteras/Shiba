@@ -1,17 +1,16 @@
 import os
-#from Shiba.parameter_manager import ParameterManager
-#from Shiba.wannier_reader import WannierHamiltonian
 
-def cell(x,y,z):
+def cell(x:int,y:int,z:int) -> int:
+    print(abs(x)+abs(y)+abs(z))
     return (abs(x)+abs(y)+abs(z))
 
-def logger(s):
+def logger(s:str) -> None:
     logfile = 'out.log'
     print(s, end='')
     with open(logfile, 'a') as f:
         f.write(s)
 
-def get_time(value):
+def get_time(value) -> str:
     timestr = ''
     if(value == 0):
         timestr += '00'
@@ -21,7 +20,7 @@ def get_time(value):
         timestr += str(value)
     return timestr
 
-def stop_watch(start, finish):
+def stop_watch(start, finish) -> str:
     s_in_h = 3600
     s_in_min = 60
     elapsed = int(finish-start)

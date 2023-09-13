@@ -31,7 +31,7 @@ class ParameterManager:
       vran: float = 5.0e-1
       vpts: int = 1000
       nc: int = 0
-      spec: bool = False
+      spec: int = 0
       opt: int = 2
       plot: bool = True
       nstm: np.ndarray = np.array([])
@@ -48,7 +48,7 @@ class ParameterManager:
       sub: str = ''
 
       # Constants
-      MU: float = -0.1452  # CONSTANTS should be in capital letters
+      MU: float = -0.1452  
       EVTOA: float = constants.eV**2/constants.hbar
       BETA: np.ndarray = 1.0/((constants.k/constants.eV)*temperature)
       
@@ -86,17 +86,20 @@ class ParameterManager:
                   self.vpts = int(splitted_line[1])
                if splitted_line[0].lower() == 'nc': 
                   self.nc = int(splitted_line[1])
-               if splitted_line[0].lower() == 'spec': 
-                  self.spec = bool(splitted_line[1])
                if splitted_line[0].lower() == 'opt': 
                   self.opt = int(splitted_line[1])
+               if splitted_line[0].lower() == 'spec':  
+                  if splitted_line[1] in '0yY' or splitted_line[1].lower()== 'true': 
+                     self.spec = 0
+                  elif splitted_line[1] in '1nN' or splitted_line[1].lower()== 'false':
+                     self.spec = 1
                if splitted_line[0].lower() == 'plot':  
                   if splitted_line[1] in '0yY' or splitted_line[1].lower()== 'true': 
                      self.plot = True
                   elif splitted_line[1] in '1nN' or splitted_line[1].lower()== 'false':
                      self.plot = False
-          self.NSTM = np.genfromtxt(os.path.join(self.input_dir,self.stm),dtype=None) # var Should be lower case
-          self.NSUB = np.genfromtxt(os.path.join(self.input_dir,self.sub),dtype=None)
+          self.nstm = np.genfromtxt(os.path.join(self.input_dir,self.stm),dtype=None) # var Should be lower case
+          self.nsub = np.genfromtxt(os.path.join(self.input_dir,self.sub),dtype=None)
 
 if __name__ == '__main__':
    print('hi')

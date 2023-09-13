@@ -49,8 +49,7 @@ if __name__ == '__main__':
    Parameters = ParameterManager()
    Parameters.extract_input_information()
    WannierParameters = WannierHamiltonian()
-   WannierParameters.read_wannier_info(Parameters.input_dir,Parameters.up_h, 
-                     Parameters.down_h,Parameters.noncolin_h,Parameters.nc)
+   WannierParameters.read_wannier_info(Parameters)
 
    TransportHamiltonian = TransportCalculation()
    TransportHamiltonian.construct_nambu(Parameters,WannierParameters)

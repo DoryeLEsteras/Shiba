@@ -223,11 +223,11 @@ class TransportCalculation:
           self.conductance = np.zeros_like(self.voltage)
           for i in range(len(self.voltage)):
               if(Parameters.opt==0):
-                 self.current[i] = self.integralOriginal(self.voltage[i],0.0,self.eps,Parameters.BETA)
+                 self.current[i] = self.integral_original(self.voltage[i],0.0,self.eps,Parameters.BETA)
               elif(Parameters.opt==1):
-                 self.current[i] = self.integralSparse(self.voltage[i],0.0,self.eps,Parameters.BETA)
+                 self.current[i] = self.integral_sparse(self.voltage[i],0.0,self.eps,Parameters.BETA)
               elif(Parameters.opt==2):
-                 self.current[i] = self.integralContract(self.voltage[i],0.0,self.eps,Parameters.BETA)
+                 self.current[i] = self.integral_contract(self.voltage[i],0.0,self.eps,Parameters.BETA)
               else:
                  logger('\nIncompatible optimization flag, exiting.' + '\n')
                  sys.exit(0) 
@@ -248,7 +248,7 @@ class TransportCalculation:
 
           np.savetxt(os.path.join(Parameters.outdir,'ivdata.out'), np.array([self.voltage,self.current,self.conductance]).T, fmt=['%.8e', '%.8e', '%.8e'])
 
-      def integralOriginal(self,V1, V2,BETA):
+      def integral_original(self,V1, V2,BETA):
           # Original result as a nested loop over eigenvalues
           csum = 0.0
           for i in range(len(self.eps)):
@@ -262,7 +262,7 @@ class TransportCalculation:
                     )
           return np.real(csum)
 
-      def integralSparse(self,V1, V2,eps,BETA):
+      def integral_sparse(self,V1, V2,eps,BETA):
           # Nested loop replaced by a zipped loop over sparse matrix
           csum = 0.0
           for i,j,v in zip(self.GammaProd.row, self.GammaProd.col, self.GammaProd.data):
@@ -276,7 +276,7 @@ class TransportCalculation:
                           )
           return np.real(csum)
 
-      def integralContract(self,V1, V2,eps,BETA):
+      def integral_contract(self,V1, V2,eps,BETA):
           # Explicit loops replaced by numpy broadcasting and array operations
           C = ((special.digamma(0.5+(BETA/(2.0j*np.pi))*(self.eps.conj()-V1))
                -special.digamma(0.5+(BETA/(2.0j*np.pi))*(self.eps.conj()-V2)))[:,None]
