@@ -12,8 +12,8 @@ setup(
     package_data={'Shiba':[]},
     include_package_data=True,
     scripts=[
-         'scripts/codigo_original.py',
-         'scripts/refactored_code.py'
+         'scripts/wstm.py',
+         'scripts/create_template.py'
      ],
     install_requires=[
         'numpy',

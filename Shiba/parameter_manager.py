@@ -60,7 +60,7 @@ class ParameterManager:
              self.outdir = self.input_dir
           input_file = open(os.path.join(self.input_dir,self.shiba_input), 'r')
           for line_number, line in enumerate(input_file): 
-            splitted_line = line.replace('\n','').replace(' ','').split('='); 
+            splitted_line = line.replace('\n','').replace(' ','').replace(',','').split('='); 
             if len(splitted_line) > 1:
                if splitted_line[0].lower() == 'stm_file':
                   self.stm = splitted_line[1]
