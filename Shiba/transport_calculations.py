@@ -13,7 +13,7 @@ class TransportCalculation:
       Idnorb2: np.ndarray = np.array([])
       Idnorbup: np.ndarray = np.array([])
       Idnorbdn: np.ndarray = np.array([])
-      heff: list = field(default_factory=list)
+      heff: np.ndarray = np.array([])
       Gamma1: np.ndarray = np.array([])
       Gamma2: np.ndarray = np.array([])
       Gamma1RR: np.ndarray = np.array([])
@@ -74,8 +74,8 @@ class TransportCalculation:
                               hdd[io,jo]=Wannier_h.mels[idx*Wannier_h.norb**2+i*Wannier_h.norb+j,5]+1.0j*Wannier_h.mels[idx*Wannier_h.norb**2+i*Wannier_h.norb+j,6]
 
                     # Align Fermi level at zero
-                    huu -= Parameters.MU*Idnorb2
-                    hdd -= Parameters.MU*Idnorb2
+                    huu -= Parameters.mu*Idnorb2
+                    hdd -= Parameters.mu*Idnorb2
 
                     # Construct the corresponding blocks of the full Nambu Hamiltonian
                     row = ibl*4*(Wannier_h.norb//2) # Block diagonal super matrix
@@ -119,8 +119,8 @@ class TransportCalculation:
                              huu[i,j]=Wannier_h.melsup[idx*Wannier_h.norbup**2+i*Wannier_h.norbup+j,5]+1.0j*Wannier_h.melsup[idx*Wannier_h.norbup**2+i*Wannier_h.norbup+j,6]
 
                      # Align Fermi level at zero
-                     hdd -= Parameters.MU*self.Idnorbdn
-                     huu -= Parameters.MU*self.Idnorbup
+                     hdd -= Parameters.mu*self.Idnorbdn
+                     huu -= Parameters.mu*self.Idnorbup
 
                      # Construct the corresponding blocks of the full Nambu Hamiltonian
                      row = ibl*4*(Wannier_h.norb//2) # Block diagonal super matrix
@@ -159,15 +159,33 @@ class TransportCalculation:
           Id4     = np.eye(4, dtype=complex)
           gam1    = np.zeros((4*(Wannier_h.norb//2),4*(Wannier_h.norb//2)), dtype=complex)
           gam2    = np.zeros((4*(Wannier_h.norb//2),4*(Wannier_h.norb//2)), dtype=complex)
+         
+          """ For coupled-spin Wannier data (calculation_method==1), the coupling orbitals come
+              in pairs (up+dn), i.e., the list is indexed accordingly. For the spin-resolved 
+              case (calculation_method ==2), each orbital is coupled individually."""
 
-          # Each orbital from NSTM is coupled to the STM orbital (full)
-          for i in Parameters.nstm:
-              for j in Parameters.nstm:
-                  gam1[4*(i-1):4*i,4*(j-1):4*j] = Parameters.gamma*Id4
+          # Each orbital from NSTM is coupled to the STM orbital (full).
+          if(Wannier_h.calculation_mode == 1):
+             for i in Parameters.nstm[1::2]:
+                 for j in Parameters.nstm[1::2]:
+                     print(i,j,i//2,j//2,4*((i//2)-1),4*(i//2),4*((j//2)-1),4*(j//2),gam1[4*((i//2)-1):4*(i//2),4*((j//2)-1):4*(j//2)].shape)
+                     gam1[4*((i//2)-1):4*(i//2),4*((j//2)-1):4*(j//2)] = Parameters.gamma*Id4
+          elif(Wannier_h.calculation_mode == 2):
+             for i in Parameters.nstm:
+                 for j in Parameters.nstm:
+                     # print(i,j,4*(i-1),4*i,4*(j-1),4*j,gam1[4*(i-1):4*i,4*(j-1):4*j].shape)
+                     gam1[4*(i-1):4*i,4*(j-1):4*j] = Parameters.gamma*Id4
 
           # Each orbital from NSUB is coupled to individual substrate orbitals (diagonal)
-          for i in Parameters.nsub:
-              gam2[4*(i-1):4*i,4*(i-1):4*i] = Parameters.frac*Parameters.gamma*Id4
+          if(Wannier_h.calculation_mode == 1):
+             for i in Parameters.nsub[1::2]: 
+                 #print(i,i//2,4*((i//2)-1),4*(i//2),gam1[4*((i//2)-1):4*(i//2),4*((i//2)-1):4*(i//2)].shape)
+                 gam2[4*((i//2)-1):4*(i//2),4*((i//2)-1):4*(i//2)] = Parameters.frac*Parameters.gamma*Id4
+          elif(Wannier_h.calculation_mode == 2):
+               for i in Parameters.nsub:
+                   #print(i,i//2,4*((i//2)-1),4*(i//2),gam1[4*((i//2)-1):4*(i//2),4*((i//2)-1):4*(i//2)].shape)
+                   gam2[4*(i-1):4*i,4*(i-1):4*i] = Parameters.frac*Parameters.gamma*Id4
+        
 
           # Each WS overlap block has the same coupling matrix structure,
           # so we duplicate the individual blocks as kronecker products

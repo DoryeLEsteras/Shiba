@@ -23,17 +23,11 @@ dorye.esteras@uv.es
 
 '''
 
-from dataclasses import dataclass
 from Shiba.wannier_reader import WannierHamiltonian
 from Shiba.basic_functions import logger,get_time,stop_watch,estimate_memory
 from Shiba.parameter_manager import parser, ParameterManager
 from Shiba.transport_calculations import TransportCalculation
 from Shiba.plotter import PlotManager
-
-import sys
-import numpy as np
-from scipy import linalg, special, sparse, constants
-import matplotlib.pyplot as plt
 import time
 
 
@@ -51,13 +45,14 @@ if __name__ == '__main__':
    WannierParameters = WannierHamiltonian()
    WannierParameters.read_wannier_info(Parameters)
 
+   estimate_memory(Parameters,WannierParameters)
+   
    TransportHamiltonian = TransportCalculation()
    TransportHamiltonian.construct_nambu(Parameters,WannierParameters)
    TransportHamiltonian.construct_coupling_matrices(Parameters,WannierParameters)
    TransportHamiltonian.solve_hamiltonian(Parameters)
    Plotter = PlotManager()
    Plotter.manage_plots(Parameters,TransportHamiltonian)
-   estimate_memory(Parameters,WannierParameters)
     
 ####################
 # Timer and finish #

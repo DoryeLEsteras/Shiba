@@ -23,17 +23,18 @@ def parser():
 @dataclass
 class ParameterManager: 
       #Input parameters (Default values)
-      temperature: float = 350.0e-3
-      delta: float = 0.0
-      alpha: float = 0.0
-      gamma: float = 0.1e-3
-      frac: float = 1.0
-      vran: float = 5.0e-1
-      vpts: int = 1000
-      nc: int = 0
-      spec: int = 0
-      opt: int = 2
-      plot: bool = True
+      mu: float = 0.0                # Fermi level in eV
+      temperature: float = 350.0e-3  # 
+      delta: float = 0.0  # Superconductive pair potential (phenomenological) in eV
+      alpha: float = 0.0  # Spin-orbit interaction (phenomenological parameter) in ???
+      gamma: float = 0.1e-3  # Coupling strength of the electrodes (estimated from peak width) in eV          
+      frac: float = 1.0      # Relative coupling: sub vs stm (1.0 means equal coupling).
+      vran: float = 5.0e-1   # Voltage range in eV
+      vpts: int = 1000       # Number of voltage points
+      nc: int = 0            # Number of Wigner-Seitz neigbouring cells considered for the overlaps in the supermatrix
+      spec: int = 0          # Calculate spectral and transmision functions
+      opt: int = 2           # Optimization
+      plot: bool = True      # Make plots?
       nstm: np.ndarray = np.array([])
       nsub: np.ndarray = np.array([])
 
@@ -48,7 +49,6 @@ class ParameterManager:
       sub: str = ''
 
       # Constants
-      MU: float = -0.1452  
       EVTOA: float = constants.eV**2/constants.hbar
       BETA: np.ndarray = 1.0/((constants.k/constants.eV)*temperature)
       
@@ -72,6 +72,8 @@ class ParameterManager:
                   self.down_h = splitted_line[1]
                if splitted_line[0].lower() == 'noncolin_h':
                   self.noncolin_h = splitted_line[1]
+               if splitted_line[0].lower() == 'mu':
+                  self.mu = splitted_line[1] 
                if splitted_line[0].lower() == 'delta':
                   self.delta = float(splitted_line[1])
                if splitted_line[0].lower() == 'alpha':

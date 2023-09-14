@@ -1,7 +1,6 @@
 import os
 
 def cell(x:int,y:int,z:int) -> int:
-    print(abs(x)+abs(y)+abs(z))
     return (abs(x)+abs(y)+abs(z))
 
 def logger(s:str) -> None:
