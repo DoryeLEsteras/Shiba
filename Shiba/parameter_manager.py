@@ -73,7 +73,7 @@ class ParameterManager:
                if splitted_line[0].lower() == 'noncolin_h':
                   self.noncolin_h = splitted_line[1]
                if splitted_line[0].lower() == 'mu':
-                  self.mu = splitted_line[1] 
+                  self.mu = float(splitted_line[1])
                if splitted_line[0].lower() == 'delta':
                   self.delta = float(splitted_line[1])
                if splitted_line[0].lower() == 'alpha':
@@ -102,6 +102,3 @@ class ParameterManager:
                      self.plot = False
           self.nstm = np.genfromtxt(os.path.join(self.input_dir,self.stm),dtype=None) # var Should be lower case
           self.nsub = np.genfromtxt(os.path.join(self.input_dir,self.sub),dtype=None)
-
-if __name__ == '__main__':
-   print('hi')
