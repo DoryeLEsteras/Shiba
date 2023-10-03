@@ -100,5 +100,5 @@ class ParameterManager:
                      self.plot = True
                   elif splitted_line[1] in '1nN' or splitted_line[1].lower()== 'false':
                      self.plot = False
-          self.nstm = np.genfromtxt(os.path.join(self.input_dir,self.stm),dtype=None) # var Should be lower case
-          self.nsub = np.genfromtxt(os.path.join(self.input_dir,self.sub),dtype=None)
+          self.nstm = np.loadtxt(os.path.join(self.input_dir,self.stm),dtype=int,ndmin=1)
+          self.nsub = np.loadtxt(os.path.join(self.input_dir,self.sub),dtype=int,ndmin=1)

@@ -1,3 +1,4 @@
+#!/usr/bin/python
 '''
 
 This code calculates current-voltage characteristics of a molecular structure 

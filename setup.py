@@ -13,7 +13,7 @@ setup(
     include_package_data=True,
     scripts=[
          'scripts/wstm.py',
-         'scripts/create_template.py'
+         'scripts/create_shiba_template.py'
      ],
     install_requires=[
         'numpy',
