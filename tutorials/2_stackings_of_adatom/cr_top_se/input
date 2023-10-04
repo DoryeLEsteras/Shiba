@@ -1,0 +1,34 @@
+#################################
+############# INPUT #############
+#################################
+sub_file = sub.in
+stm_file = stm.in
+up_h = cr_top_se.up_hr.dat
+down_h = cr_top_se.down_hr.dat
+# noncolin_h = nbse2.up_hr.dat
+delta = 0.00135
+mu = -1.0763
+!alpha = 0
+gamma = 0.00025
+frac = 1.0
+vpts = 500
+vran = 0.2
+nc= 2
+spec = 0
+opt = 2
+plot = 0
+temperature = 350e-3
+
+#################################
+############## END ##############
+#################################
+
+# The input is not sensitive to:
+#capital letters, commas and spaces
+
+# Every symbol before the flags
+# will work as a comment
+# Exs:  
+       # frac
+	   #frac
+	   ! frac

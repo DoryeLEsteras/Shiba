@@ -49,18 +49,18 @@ else:
 
 # System parameters (units are in eV, when applicable)
 mu      = -1.4187           # Fermi level
-Delta   = 1.0e-1            # Superconducting pair potential (phenomenological parameter)
+Delta   = 0.0e-1            # Superconducting pair potential (phenomenological parameter)
 alpha   = 0.0               # Spin-orbit interaction (phenomenological parameter when calc==2)
-gamma   = 0.1e-3            # Coupling strength to the electrodes (estimate from peak width)
+gamma   = 0.25e-3            # Coupling strength to the electrodes (estimate from peak width)
 frac    = 1.0               # Relative coupling: SUB vs. STM (1.0 means equal coupling)
-vran    = 5.0e-1            # Voltage range
+vran    = 1e-1            # Voltage range
 vpts    = 500               # Number of voltage points
 NC      = 0                 # Depth of Wigner-Seitz overlaps in the supermatrix
 spec    = 0                 # Calculate spectral and transmission functions?
 opt     = 2                 # Optimization: 0=Eigenvalue loop, 1=Sparse-zip loop, 2=Broadcasting
-plot    = 0                 # Make plots?
-NSTM    = np.genfromtxt('stm.in', dtype=None)   # Orbitals coupled to the STM
-NSUB    = np.genfromtxt('sub.in', dtype=None)   # Orbitals coupled to the substrate
+plot    = 1                 # Make plots?
+NSTM    = np.genfromtxt('stm_corrected.in', dtype=None)   # Orbitals coupled to the STM
+NSUB    = np.genfromtxt('sub_corrected.in', dtype=None)   # Orbitals coupled to the substrate
 
 # Set either temperature or beta (inverse temperature)
 temperature = 350.0e-3
