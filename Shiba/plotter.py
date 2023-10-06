@@ -38,12 +38,12 @@ class PlotManager:
              axs[0].set_xlabel(r'$E-E_{\mathrm{F}}$ [meV]')
              axs[0].set_ylabel(r'$A(E)$')
 
-          axs[Parameters.spec].plot(TransportHamiltonian.voltage/1.0e-3, TransportHamiltonian.current*Parameters.EVTOA/1.0e-9) # voltage in millivolts, current in nanoamperes
+          axs[Parameters.spec].plot(TransportHamiltonian.voltage/1.0e-3, TransportHamiltonian.current*Parameters.EVTOA/1.0e-9,linewidth=0.5) # voltage in millivolts, current in nanoamperes
           axs[Parameters.spec].set_title(r'Current', loc='left')
           axs[Parameters.spec].set_xlabel(r'$V$ [meV]')
           axs[Parameters.spec].set_ylabel(r'$I$ [nA]')
 
-          axs[Parameters.spec+1].plot(TransportHamiltonian.voltage/1.0e-3, TransportHamiltonian.conductance) # voltage in milivolts, conductance in 2e^2/h
+          axs[Parameters.spec+1].plot(TransportHamiltonian.voltage/1.0e-3, TransportHamiltonian.conductance,linewidth=0.5) # voltage in milivolts, conductance in 2e^2/h
           if(Parameters.spec):
              axs[Parameters.spec+1].plot(TransportHamiltonian.w/1.0e-3, TransportHamiltonian.transmission, '--')
           axs[Parameters.spec+1].set_title(r'Conductance', loc='left')
