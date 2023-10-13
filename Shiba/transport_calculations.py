@@ -74,8 +74,8 @@ class TransportCalculation:
                               hdd[io,jo]=Wannier_h.mels[idx*Wannier_h.norb**2+i*Wannier_h.norb+j,5]+1.0j*Wannier_h.mels[idx*Wannier_h.norb**2+i*Wannier_h.norb+j,6]
 
                     # Align Fermi level at zero
-                    huu -= Parameters.mu*Idnorb2
-                    hdd -= Parameters.mu*Idnorb2
+                    huu -= Parameters.mu*self.Idnorb2
+                    hdd -= Parameters.mu*self.Idnorb2
 
                     # Construct the corresponding blocks of the full Nambu Hamiltonian
                     row = ibl*4*(Wannier_h.norb//2) # Block diagonal super matrix
