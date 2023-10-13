@@ -1,0 +1,21 @@
+
+Wannier orbitals:	176+176=352
+Wigner-Seitz cells:	9
+(Reciprocal grid:	9)
+Depth of WS overlaps:	2
+Full Hamiltonian size:	4928x4928
+
+Estimated memory requirement = 11.30 GB
+
+The full Hamiltonian is hermitian? True
+
+Diagonalization ...
+
+Current-voltage ...
+
+Plotting sparsity maps ...
+
+Plotting conductance ...
+
+Done! Time wasted: 00:53:25
+
