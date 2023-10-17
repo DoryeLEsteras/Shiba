@@ -50,7 +50,7 @@ class ParameterManager:
 
       # Constants
       EVTOA: float = constants.eV**2/constants.hbar
-      BETA: np.ndarray = 1.0/((constants.k/constants.eV)*temperature)
+      BETA: float = 0.0
       
       def extract_input_information(self) -> None:
           shiba_input_and_dir, self.outdir = parser()
@@ -76,6 +76,8 @@ class ParameterManager:
                   self.mu = float(splitted_line[1])
                if splitted_line[0].lower() == 'delta':
                   self.delta = float(splitted_line[1])
+               if splitted_line[0].lower() == 'temperature':
+                  self.temperature = float(splitted_line[1])
                if splitted_line[0].lower() == 'alpha':
                   self.alpha = float(splitted_line[1])
                if splitted_line[0].lower() == 'gamma':
@@ -102,3 +104,4 @@ class ParameterManager:
                      self.plot = False
           self.nstm = np.loadtxt(os.path.join(self.input_dir,self.stm),dtype=int,ndmin=1)
           self.nsub = np.loadtxt(os.path.join(self.input_dir,self.sub),dtype=int,ndmin=1)
+          self.BETA = 1.0/((constants.k/constants.eV)*self.temperature)

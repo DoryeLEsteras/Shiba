@@ -1,10 +1,13 @@
-from dataclasses import dataclass, field
-from Shiba.basic_functions import cell, logger
-import numpy as np
-import matplotlib.pyplot as plt
 import os
 import sys
-from scipy import linalg, special, sparse, constants
+from dataclasses import dataclass, field
+
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy import constants, linalg, sparse, special
+
+from Shiba.basic_functions import cell, logger
+
 
 @dataclass
 class TransportCalculation:
@@ -227,7 +230,6 @@ class TransportCalculation:
           self. Gamma2LL = psil.conj().T @ self.Gamma2 @ psil @ invover_rl
           if(Parameters.opt==1):
              self.GammaProd = sparse.coo_matrix(self.Gamma1RR*self.Gamma2LL.T)
-          #del psil, psir, overlap_lr, invover_lr, overlap_rl, invover_rl
 
           if(Parameters.spec):
              logger('\n')
@@ -239,13 +241,23 @@ class TransportCalculation:
           self.voltage = np.linspace(-Parameters.vran, Parameters.vran, Parameters.vpts)
           self.current = np.zeros_like(self.voltage)
           self.conductance = np.zeros_like(self.voltage)
+
+          logger('\nThermal broadening:\n')
+          if(1.0/Parameters.BETA < 0.1*np.min(np.abs(np.imag(self.eps)))):
+             self.opt=3
+             logger("%.2e = kT << min(|Im(eps)|) = %.2e => Entering zero-temperature calculation\n"%(1.0/Parameters.BETA,np.min(np.abs(np.imag(self.eps)))))
+          else:
+             Parameters.opt=2
+             logger("%.2e = kT ~ min(|Im(eps)|) = %.2e => Entering finite-temperature calculation\n"%(1.0/Parameters.BETA,np.min(np.abs(np.imag(self.eps)))))
           for i in range(len(self.voltage)):
               if(Parameters.opt==0):
-                 self.current[i] = self.integral_original(self.voltage[i],0.0,self.eps,Parameters.BETA)
+                 self.current[i] = self.integral_original(self.voltage[i],0.0,Parameters.BETA)
               elif(Parameters.opt==1):
-                 self.current[i] = self.integral_sparse(self.voltage[i],0.0,self.eps,Parameters.BETA)
+                 self.current[i] = self.integral_sparse(self.voltage[i],0.0,Parameters.BETA)
               elif(Parameters.opt==2):
-                 self.current[i] = self.integral_contract(self.voltage[i],0.0,self.eps,Parameters.BETA)
+                 self.current[i] = self.integral_contract(self.voltage[i],0.0,Parameters.BETA)
+              elif(Parameters.opt==3):
+                 self.current[i] = integralZeroTemp(voltage[i],0.0)
               else:
                  logger('\nIncompatible optimization flag, exiting.' + '\n')
                  sys.exit(0) 
@@ -280,7 +292,7 @@ class TransportCalculation:
                     )
           return np.real(csum)
 
-      def integral_sparse(self,V1, V2,eps,BETA):
+      def integral_sparse(self,V1, V2,BETA):
           # Nested loop replaced by a zipped loop over sparse matrix
           csum = 0.0
           for i,j,v in zip(self.GammaProd.row, self.GammaProd.col, self.GammaProd.data):
@@ -294,11 +306,16 @@ class TransportCalculation:
                           )
           return np.real(csum)
 
-      def integral_contract(self,V1, V2,eps,BETA):
+      def integral_contract(self,V1, V2,BETA):
           # Explicit loops replaced by numpy broadcasting and array operations
           C = ((special.digamma(0.5+(BETA/(2.0j*np.pi))*(self.eps.conj()-V1))
                -special.digamma(0.5+(BETA/(2.0j*np.pi))*(self.eps.conj()-V2)))[:,None]
               +(special.digamma(0.5-(BETA/(2.0j*np.pi))*(self.eps-V2))
                -special.digamma(0.5-(BETA/(2.0j*np.pi))*(self.eps-V1)))[None,:]
                )/(self.eps.conj()[:,None]-self.eps[None,:])
-          return np.real(np.trace((self.Gamma1RR * C) @ self.Gamma2LL))
+          return np.real(np.einsum('ij,ij,ji',self.Gamma1RR,C,self.Gamma2LL))
+      def integralZeroTemp(V1, V2):
+           # Digamma function replaced by log at the zero-temperature limit
+           C = ((np.log(self.eps.conj()-V1)-np.log(self.eps.conj()-V2))[:,None] + \
+               (np.log(self.eps-V2)-np.log(self.eps-V1))[None,:])/(self.eps.conj()[:,None]-self.eps[None,:])
+           return np.real(np.einsum('ij,ij,ji',self.Gamma1RR,C,self.Gamma2LL))
