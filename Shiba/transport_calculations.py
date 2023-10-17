@@ -171,24 +171,19 @@ class TransportCalculation:
           if(Wannier_h.calculation_mode == 1):
              for i in Parameters.nstm[1::2]:
                  for j in Parameters.nstm[1::2]:
-                     print(i,j,i//2,j//2,4*((i//2)-1),4*(i//2),4*((j//2)-1),4*(j//2),gam1[4*((i//2)-1):4*(i//2),4*((j//2)-1):4*(j//2)].shape)
                      gam1[4*((i//2)-1):4*(i//2),4*((j//2)-1):4*(j//2)] = Parameters.gamma*Id4
           elif(Wannier_h.calculation_mode == 2):
              for i in Parameters.nstm:
                  for j in Parameters.nstm:
-                     # print(i,j,4*(i-1),4*i,4*(j-1),4*j,gam1[4*(i-1):4*i,4*(j-1):4*j].shape)
                      gam1[4*(i-1):4*i,4*(j-1):4*j] = Parameters.gamma*Id4
 
           # Each orbital from NSUB is coupled to individual substrate orbitals (diagonal)
           if(Wannier_h.calculation_mode == 1):
              for i in Parameters.nsub[1::2]: 
-                 #print(i,i//2,4*((i//2)-1),4*(i//2),gam1[4*((i//2)-1):4*(i//2),4*((i//2)-1):4*(i//2)].shape)
-                 gam2[4*((i//2)-1):4*(i//2),4*((i//2)-1):4*(i//2)] = Parameters.frac*Parameters.gamma*Id4
+                   gam2[4*((i//2)-1):4*(i//2),4*((i//2)-1):4*(i//2)] = Parameters.frac*Parameters.gamma*Id4
           elif(Wannier_h.calculation_mode == 2):
                for i in Parameters.nsub:
-                   #print(i,i//2,4*((i//2)-1),4*(i//2),gam1[4*((i//2)-1):4*(i//2),4*((i//2)-1):4*(i//2)].shape)
                    gam2[4*(i-1):4*i,4*(i-1):4*i] = Parameters.frac*Parameters.gamma*Id4
-        
 
           # Each WS overlap block has the same coupling matrix structure,
           # so we duplicate the individual blocks as kronecker products
@@ -244,7 +239,7 @@ class TransportCalculation:
 
           logger('\nThermal broadening:\n')
           if(1.0/Parameters.BETA < 0.1*np.min(np.abs(np.imag(self.eps)))):
-             self.opt=3
+             Parameters.opt=3
              logger("%.2e = kT << min(|Im(eps)|) = %.2e => Entering zero-temperature calculation\n"%(1.0/Parameters.BETA,np.min(np.abs(np.imag(self.eps)))))
           else:
              Parameters.opt=2
@@ -257,7 +252,7 @@ class TransportCalculation:
               elif(Parameters.opt==2):
                  self.current[i] = self.integral_contract(self.voltage[i],0.0,Parameters.BETA)
               elif(Parameters.opt==3):
-                 self.current[i] = integralZeroTemp(voltage[i],0.0)
+                 self.current[i] = self.integralZeroTemp(self.voltage[i],0.0)
               else:
                  logger('\nIncompatible optimization flag, exiting.' + '\n')
                  sys.exit(0) 
@@ -314,7 +309,8 @@ class TransportCalculation:
                -special.digamma(0.5-(BETA/(2.0j*np.pi))*(self.eps-V1)))[None,:]
                )/(self.eps.conj()[:,None]-self.eps[None,:])
           return np.real(np.einsum('ij,ij,ji',self.Gamma1RR,C,self.Gamma2LL))
-      def integralZeroTemp(V1, V2):
+
+      def integralZeroTemp(self, V1, V2):
            # Digamma function replaced by log at the zero-temperature limit
            C = ((np.log(self.eps.conj()-V1)-np.log(self.eps.conj()-V2))[:,None] + \
                (np.log(self.eps-V2)-np.log(self.eps-V1))[None,:])/(self.eps.conj()[:,None]-self.eps[None,:])
