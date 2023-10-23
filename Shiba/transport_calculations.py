@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy import constants, linalg, sparse, special
-
+from joblib import Parallel, delayed, cpu_count
 from Shiba.basic_functions import cell, logger
 
 
@@ -244,18 +244,20 @@ class TransportCalculation:
           else:
              Parameters.opt=2
              logger("%.2e = kT ~ min(|Im(eps)|) = %.2e => Entering finite-temperature calculation\n"%(1.0/Parameters.BETA,np.min(np.abs(np.imag(self.eps)))))
-          for i in range(len(self.voltage)):
-              if(Parameters.opt==0):
-                 self.current[i] = self.integral_original(self.voltage[i],0.0,Parameters.BETA)
-              elif(Parameters.opt==1):
-                 self.current[i] = self.integral_sparse(self.voltage[i],0.0,Parameters.BETA)
-              elif(Parameters.opt==2):
-                 self.current[i] = self.integral_contract(self.voltage[i],0.0,Parameters.BETA)
-              elif(Parameters.opt==3):
-                 self.current[i] = self.integralZeroTemp(self.voltage[i],0.0)
-              else:
-                 logger('\nIncompatible optimization flag, exiting.' + '\n')
-                 sys.exit(0) 
+
+          # for i in range(len(self.voltage)):
+          #     if(Parameters.opt==0):
+          #         self.current[i] = self.integral_original(self.voltage[i],0.0,Parameters.BETA)
+          #     elif(Parameters.opt==1):
+          #         self.current[i] = self.integral_sparse(self.voltage[i],0.0,Parameters.BETA)
+          #     elif(Parameters.opt==2):
+          #         self.current[i] = self.integral_contract(self.voltage[i],0.0,Parameters.BETA)
+          #     elif(Parameters.opt==3):
+          #         self.current[i] = self.integralZeroTemp(self.voltage[i],0.0)
+          #     else:
+          #         logger('\nIncompatible optimization flag, exiting.' + '\n')
+          #         sys.exit(0)
+
           # The above structure can be written perhaps more elegantly as below (for Python 3.10 onward)
           #    match opt:
           #        case 0:
@@ -267,6 +269,18 @@ class TransportCalculation:
           #        case _:
           #            logger('\nIncompatible optimization flag, exiting.' + '\n')
           #            sys.exit(0)
+
+          if(Parameters.opt==0):
+              self.current = Parallel(n_jobs=cpu_count(), prefer="threads")(delayed(self.integral_original)(v,0.0) for v in self.voltage)
+          elif(Parameters.opt==1):
+              self.current = Parallel(n_jobs=cpu_count(), prefer="threads")(delayed(self.integral_sparse)(v,0.0) for v in self.voltage)
+          elif(Parameters.opt==2):
+              self.current = Parallel(n_jobs=cpu_count(), prefer="threads")(delayed(self.integral_contract)(v,0.0) for v in self.voltage)
+          elif(Parameters.opt==3):
+              self.current = Parallel(n_jobs=cpu_count(), prefer="threads")(delayed(self.integralZeroTemp)(v,0.0) for v in self.voltage)
+          else:
+              logger('\nIncompatible optimization flag, exiting.' + '\n')
+              sys.exit(0)
 
           # Conductance is calculated as a derivative of the current w.r.t. voltage
           self.conductance = np.gradient(self.current, self.voltage[1]-self.voltage[0])

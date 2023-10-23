@@ -38,7 +38,7 @@ class PlotManager:
              axs[0].set_xlabel(r'$E-E_{\mathrm{F}}$ [meV]')
              axs[0].set_ylabel(r'$A(E)$')
 
-          axs[Parameters.spec].plot(TransportHamiltonian.voltage/1.0e-3, TransportHamiltonian.current*Parameters.EVTOA/1.0e-9,linewidth=0.5) # voltage in millivolts, current in nanoamperes
+          axs[Parameters.spec].plot(TransportHamiltonian.voltage/1.0e-3, np.asarray(TransportHamiltonian.current)*Parameters.EVTOA/1.0e-9,linewidth=0.5) # voltage in millivolts, current in nanoamperes
           axs[Parameters.spec].set_title(r'Current', loc='left')
           axs[Parameters.spec].set_xlabel(r'$V$ [meV]')
           axs[Parameters.spec].set_ylabel(r'$I$ [nA]')
