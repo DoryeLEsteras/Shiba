@@ -163,27 +163,36 @@ class TransportCalculation:
           gam1    = np.zeros((4*(Wannier_h.norb//2),4*(Wannier_h.norb//2)), dtype=complex)
           gam2    = np.zeros((4*(Wannier_h.norb//2),4*(Wannier_h.norb//2)), dtype=complex)
          
-          """ For coupled-spin Wannier data (calculation_method==1), the coupling orbitals come
+          """ For coupled-spin Wannier data (calculation_mode==1), the coupling orbitals come
               in pairs (up+dn), i.e., the list is indexed accordingly. For the spin-resolved 
-              case (calculation_method ==2), each orbital is coupled individually."""
+              case (calculation_mode==2), each orbital is coupled individually."""
 
-          # Each orbital from NSTM is coupled to the STM orbital (full).
+          # Each orbital from NSTM is coupled to the STM orbital (full)
           if(Wannier_h.calculation_mode == 1):
-             for i in Parameters.nstm[1::2]:
-                 for j in Parameters.nstm[1::2]:
+             for i in Parameters.noncolin_nstm[1::2]:
+                 for j in Parameters.noncolin_nstm[1::2]:
                      gam1[4*((i//2)-1):4*(i//2),4*((j//2)-1):4*(j//2)] = Parameters.gamma*Id4
           elif(Wannier_h.calculation_mode == 2):
-             for i in Parameters.nstm:
-                 for j in Parameters.nstm:
-                     gam1[4*(i-1):4*i,4*(j-1):4*j] = Parameters.gamma*Id4
+             for i in Parameters.up_nstm:
+                 for j in Parameters.up_nstm:
+                     gam1[4*(i-1)+0,4*(j-1)+0] = Parameters.gamma
+                     gam1[4*(i-1)+3,4*(j-1)+3] = Parameters.gamma
+             for i in Parameters.dn_nstm:
+                 for j in Parameters.dn_nstm:
+                     gam1[4*(i-1)+1,4*(j-1)+1] = Parameters.gamma
+                     gam1[4*(i-1)+2,4*(j-1)+2] = Parameters.gamma
 
           # Each orbital from NSUB is coupled to individual substrate orbitals (diagonal)
           if(Wannier_h.calculation_mode == 1):
-             for i in Parameters.nsub[1::2]: 
+             for i in Parameters.noncolin_nsub[1::2]: 
                    gam2[4*((i//2)-1):4*(i//2),4*((i//2)-1):4*(i//2)] = Parameters.frac*Parameters.gamma*Id4
           elif(Wannier_h.calculation_mode == 2):
-               for i in Parameters.nsub:
-                   gam2[4*(i-1):4*i,4*(i-1):4*i] = Parameters.frac*Parameters.gamma*Id4
+               for i in Parameters.up_nsub:
+                   gam2[4*(i-1)+0,4*(i-1)+0] = Parameters.frac*Parameters.gamma
+                   gam2[4*(i-1)+3,4*(i-1)+3] = Parameters.frac*Parameters.gamma
+               for i in Parameters.dn_nsub:
+                   gam2[4*(i-1)+1,4*(i-1)+1] = Parameters.frac*Parameters.gamma
+                   gam2[4*(i-1)+2,4*(i-1)+2] = Parameters.frac*Parameters.gamma
 
           # Each WS overlap block has the same coupling matrix structure,
           # so we duplicate the individual blocks as kronecker products
@@ -253,7 +262,7 @@ class TransportCalculation:
           #     elif(Parameters.opt==2):
           #         self.current[i] = self.integral_contract(self.voltage[i],0.0,Parameters.BETA)
           #     elif(Parameters.opt==3):
-          #         self.current[i] = self.integralZeroTemp(self.voltage[i],0.0)
+          #         self.current[i] = self.integral_zerotemp(self.voltage[i],0.0)
           #     else:
           #         logger('\nIncompatible optimization flag, exiting.' + '\n')
           #         sys.exit(0)
@@ -271,13 +280,13 @@ class TransportCalculation:
           #            sys.exit(0)
 
           if(Parameters.opt==0):
-              self.current = Parallel(n_jobs=cpu_count(), prefer="threads")(delayed(self.integral_original)(v,0.0) for v in self.voltage)
+              self.current = Parallel(n_jobs=cpu_count(), prefer="threads")(delayed(self.integral_original)(v,0.0,Parameters.BETA) for v in self.voltage)
           elif(Parameters.opt==1):
-              self.current = Parallel(n_jobs=cpu_count(), prefer="threads")(delayed(self.integral_sparse)(v,0.0) for v in self.voltage)
+              self.current = Parallel(n_jobs=cpu_count(), prefer="threads")(delayed(self.integral_sparse)(v,0.0,Parameters.BETA) for v in self.voltage)
           elif(Parameters.opt==2):
-              self.current = Parallel(n_jobs=cpu_count(), prefer="threads")(delayed(self.integral_contract)(v,0.0) for v in self.voltage)
+              self.current = Parallel(n_jobs=cpu_count(), prefer="threads")(delayed(self.integral_contract)(v,0.0,Parameters.BETA) for v in self.voltage)
           elif(Parameters.opt==3):
-              self.current = Parallel(n_jobs=cpu_count(), prefer="threads")(delayed(self.integralZeroTemp)(v,0.0) for v in self.voltage)
+              self.current = Parallel(n_jobs=cpu_count(), prefer="threads")(delayed(self.integral_zerotemp)(v,0.0) for v in self.voltage)
           else:
               logger('\nIncompatible optimization flag, exiting.' + '\n')
               sys.exit(0)
@@ -287,7 +296,7 @@ class TransportCalculation:
 
           np.savetxt(os.path.join(Parameters.outdir,'ivdata.out'), np.array([self.voltage,self.current,self.conductance]).T, fmt=['%.8e', '%.8e', '%.8e'])
 
-      def integral_original(self,V1, V2,BETA):
+      def integral_original(self, V1, V2, BETA):
           # Original result as a nested loop over eigenvalues
           csum = 0.0
           for i in range(len(self.eps)):
@@ -301,7 +310,7 @@ class TransportCalculation:
                     )
           return np.real(csum)
 
-      def integral_sparse(self,V1, V2,BETA):
+      def integral_sparse(self, V1, V2, BETA):
           # Nested loop replaced by a zipped loop over sparse matrix
           csum = 0.0
           for i,j,v in zip(self.GammaProd.row, self.GammaProd.col, self.GammaProd.data):
@@ -315,7 +324,7 @@ class TransportCalculation:
                           )
           return np.real(csum)
 
-      def integral_contract(self,V1, V2,BETA):
+      def integral_contract(self, V1, V2, BETA):
           # Explicit loops replaced by numpy broadcasting and array operations
           C = ((special.digamma(0.5+(BETA/(2.0j*np.pi))*(self.eps.conj()-V1))
                -special.digamma(0.5+(BETA/(2.0j*np.pi))*(self.eps.conj()-V2)))[:,None]
@@ -324,7 +333,7 @@ class TransportCalculation:
                )/(self.eps.conj()[:,None]-self.eps[None,:])
           return np.real(np.einsum('ij,ij,ji',self.Gamma1RR,C,self.Gamma2LL))
 
-      def integralZeroTemp(self, V1, V2):
+      def integral_zerotemp(self, V1, V2):
            # Digamma function replaced by log at the zero-temperature limit
            C = ((np.log(self.eps.conj()-V1)-np.log(self.eps.conj()-V2))[:,None] + \
                (np.log(self.eps-V2)-np.log(self.eps-V1))[None,:])/(self.eps.conj()[:,None]-self.eps[None,:])
