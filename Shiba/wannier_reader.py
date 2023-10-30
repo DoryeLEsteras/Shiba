@@ -16,9 +16,9 @@ class WannierHamiltonian:
       blocks: int = 0
 
       def mode_detector(self,Parameters):
-          if Parameters.up_h == '' and Parameters.down_h == '' and Parameters.noncolin_h != '':
+          if Parameters.up_h == '' and Parameters.down_h == '' and Parameters.comb_h != '':
              self.calculation_mode = 1
-          elif Parameters.up_h != '' and Parameters.down_h != '' and Parameters.noncolin_h == '':
+          elif Parameters.up_h != '' and Parameters.down_h != '' and Parameters.comb_h == '':
              self.calculation_mode = 2
           else:
              logger('\nIncompatible number of Hamiltonian files, exiting.' + '\n')
@@ -26,7 +26,7 @@ class WannierHamiltonian:
       def read_wannier_info(self,Parameters):
           self.mode_detector(Parameters)
           if(self.calculation_mode == 1):
-            hfile = os.path.join(Parameters.input_dir,Parameters.noncolin_h)
+            hfile = os.path.join(Parameters.input_dir,Parameters.comb_h)
             with open(hfile) as f:
                   for row, line in enumerate(f):
                       if(row==0):

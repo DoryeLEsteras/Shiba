@@ -169,28 +169,28 @@ class TransportCalculation:
 
           # Each orbital from NSTM is coupled to the STM orbital (full)
           if(Wannier_h.calculation_mode == 1):
-             for i in Parameters.noncolin_nstm[1::2]:
-                 for j in Parameters.noncolin_nstm[1::2]:
+             for i in Parameters.comb_nstm[1::2]:
+                 for j in Parameters.comb_nstm[1::2]:
                      gam1[4*((i//2)-1):4*(i//2),4*((j//2)-1):4*(j//2)] = Parameters.gamma*Id4
           elif(Wannier_h.calculation_mode == 2):
              for i in Parameters.up_nstm:
                  for j in Parameters.up_nstm:
                      gam1[4*(i-1)+0,4*(j-1)+0] = Parameters.gamma
                      gam1[4*(i-1)+3,4*(j-1)+3] = Parameters.gamma
-             for i in Parameters.dn_nstm:
-                 for j in Parameters.dn_nstm:
+             for i in Parameters.down_nstm:
+                 for j in Parameters.down_nstm:
                      gam1[4*(i-1)+1,4*(j-1)+1] = Parameters.gamma
                      gam1[4*(i-1)+2,4*(j-1)+2] = Parameters.gamma
 
           # Each orbital from NSUB is coupled to individual substrate orbitals (diagonal)
           if(Wannier_h.calculation_mode == 1):
-             for i in Parameters.noncolin_nsub[1::2]: 
+             for i in Parameters.comb_nsub[1::2]: 
                    gam2[4*((i//2)-1):4*(i//2),4*((i//2)-1):4*(i//2)] = Parameters.frac*Parameters.gamma*Id4
           elif(Wannier_h.calculation_mode == 2):
                for i in Parameters.up_nsub:
                    gam2[4*(i-1)+0,4*(i-1)+0] = Parameters.frac*Parameters.gamma
                    gam2[4*(i-1)+3,4*(i-1)+3] = Parameters.frac*Parameters.gamma
-               for i in Parameters.dn_nsub:
+               for i in Parameters.down_nsub:
                    gam2[4*(i-1)+1,4*(i-1)+1] = Parameters.frac*Parameters.gamma
                    gam2[4*(i-1)+2,4*(i-1)+2] = Parameters.frac*Parameters.gamma
 
@@ -226,6 +226,7 @@ class TransportCalculation:
           logger('\n')
           logger('Diagonalization ...\n')
           self.eps, psil, psir = linalg.eig(self.heff, left=True, right=True)
+          np.savetxt(os.path.join(Parameters.outdir,'energy.out'), np.sort_complex(self.eps).view(float).reshape(-1, 2), fmt=['%.8e','%.8e'])
           overlap_lr = psil.conj().T @ psir
           invover_lr = np.linalg.inv(overlap_lr)
           overlap_rl = psir.conj().T @ psil
