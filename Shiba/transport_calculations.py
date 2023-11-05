@@ -132,26 +132,20 @@ class TransportCalculation:
                          for j in range(0,4*(Wannier_h.norb//2),4):
                              self.h[row+i+0,col+j+0] = huu[i//4,j//4]
                              self.h[row+i+0,col+j+1] = -Parameters.delta*(i==j)
-                             self.h[row+i+0,col+j+2] = Parameters.alpha
+                             self.h[row+i+0,col+j+2] = Parameters.alpha*(i!=j)
                              self.h[row+i+0,col+j+3] = 0.0
                              self.h[row+i+1,col+j+0] = -Parameters.delta*(i==j)
                              self.h[row+i+1,col+j+1] = -hdd[i//4,j//4]
                              self.h[row+i+1,col+j+2] = 0.0
-                             self.h[row+i+1,col+j+3] = -Parameters.alpha
-                             self.h[row+i+2,col+j+0] = Parameters.alpha
+                             self.h[row+i+1,col+j+3] = -Parameters.alpha*(i!=j)
+                             self.h[row+i+2,col+j+0] = Parameters.alpha*(i!=j)
                              self.h[row+i+2,col+j+1] = 0.0
                              self.h[row+i+2,col+j+2] = hdd[i//4,j//4]
                              self.h[row+i+2,col+j+3] = Parameters.delta*(i==j)
                              self.h[row+i+3,col+j+0] = 0.0
-                             self.h[row+i+3,col+j+1] = -Parameters.alpha
+                             self.h[row+i+3,col+j+1] = -Parameters.alpha*(i!=j)
                              self.h[row+i+3,col+j+2] = Parameters.delta*(i==j)
                              self.h[row+i+3,col+j+3] = -huu[i//4,j//4]
-
-          #        if(wannier_h.calculation_mode==1):
-          #           del mels
-          #        elif(wannier_h.calculation_mode==2):
-          #           del melsup, melsdn
-          #              del degs, invdegs
 
           # The Wannier matrix-element data may not always be symmetric, so
           # the Hamiltonian is symmetrized to assure proper analytic structure
@@ -199,7 +193,6 @@ class TransportCalculation:
           blockstructure=np.eye(Wannier_h.blocks, dtype=complex) # Block diagonal super matrix
           self.Gamma1 = np.kron(blockstructure,gam1)
           self.Gamma2 = np.kron(blockstructure,gam2)
-          #del gam1, gam2, blockstructure
 
       def compute_spectral_function(self,Parameters):
           self.w = np.linspace(-Parameters.vran, Parameters.vran, Parameters.vpts)
@@ -216,7 +209,6 @@ class TransportCalculation:
               self.transmission[i] = np.real(np.trace(self.Gamma1 @ A @ self.Gamma2 @ A.conj().T))
 
           np.savetxt(os.path.join(Parameters.outdir,'specdata.out'), np.array([self.w,self.spectral,self.transmission]).T, fmt=['%.8e', '%.8e', '%.8e'])
-          #del h, heff, Gamma1, Gamma2
    
       def solve_hamiltonian(self,Parameters):
           # Effective Hamiltonian (coupled system)
