@@ -17,6 +17,10 @@ setup(
      ],
     install_requires=[
         'numpy',
+        'scipy',
+        'matplotlib',
+        'dataclasses',
+        'joblib'
     ],
     classifiers=[
         'Programming Language :: Python :: 3',

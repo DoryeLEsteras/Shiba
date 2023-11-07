@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy import constants, linalg, sparse, special
-
+from joblib import Parallel, delayed, cpu_count
 from Shiba.basic_functions import cell, logger
 
 
@@ -132,26 +132,20 @@ class TransportCalculation:
                          for j in range(0,4*(Wannier_h.norb//2),4):
                              self.h[row+i+0,col+j+0] = huu[i//4,j//4]
                              self.h[row+i+0,col+j+1] = -Parameters.delta*(i==j)
-                             self.h[row+i+0,col+j+2] = Parameters.alpha
+                             self.h[row+i+0,col+j+2] = Parameters.alpha*(i!=j)
                              self.h[row+i+0,col+j+3] = 0.0
                              self.h[row+i+1,col+j+0] = -Parameters.delta*(i==j)
                              self.h[row+i+1,col+j+1] = -hdd[i//4,j//4]
                              self.h[row+i+1,col+j+2] = 0.0
-                             self.h[row+i+1,col+j+3] = -Parameters.alpha
-                             self.h[row+i+2,col+j+0] = Parameters.alpha
+                             self.h[row+i+1,col+j+3] = -Parameters.alpha*(i!=j)
+                             self.h[row+i+2,col+j+0] = Parameters.alpha*(i!=j)
                              self.h[row+i+2,col+j+1] = 0.0
                              self.h[row+i+2,col+j+2] = hdd[i//4,j//4]
                              self.h[row+i+2,col+j+3] = Parameters.delta*(i==j)
                              self.h[row+i+3,col+j+0] = 0.0
-                             self.h[row+i+3,col+j+1] = -Parameters.alpha
+                             self.h[row+i+3,col+j+1] = -Parameters.alpha*(i!=j)
                              self.h[row+i+3,col+j+2] = Parameters.delta*(i==j)
                              self.h[row+i+3,col+j+3] = -huu[i//4,j//4]
-
-          #        if(wannier_h.calculation_mode==1):
-          #           del mels
-          #        elif(wannier_h.calculation_mode==2):
-          #           del melsup, melsdn
-          #              del degs, invdegs
 
           # The Wannier matrix-element data may not always be symmetric, so
           # the Hamiltonian is symmetrized to assure proper analytic structure
@@ -163,34 +157,42 @@ class TransportCalculation:
           gam1    = np.zeros((4*(Wannier_h.norb//2),4*(Wannier_h.norb//2)), dtype=complex)
           gam2    = np.zeros((4*(Wannier_h.norb//2),4*(Wannier_h.norb//2)), dtype=complex)
          
-          """ For coupled-spin Wannier data (calculation_method==1), the coupling orbitals come
+          """ For coupled-spin Wannier data (calculation_mode==1), the coupling orbitals come
               in pairs (up+dn), i.e., the list is indexed accordingly. For the spin-resolved 
-              case (calculation_method ==2), each orbital is coupled individually."""
+              case (calculation_mode==2), each orbital is coupled individually."""
 
-          # Each orbital from NSTM is coupled to the STM orbital (full).
+          # Each orbital from NSTM is coupled to the STM orbital (full)
           if(Wannier_h.calculation_mode == 1):
-             for i in Parameters.nstm[1::2]:
-                 for j in Parameters.nstm[1::2]:
+             for i in Parameters.comb_nstm[1::2]:
+                 for j in Parameters.comb_nstm[1::2]:
                      gam1[4*((i//2)-1):4*(i//2),4*((j//2)-1):4*(j//2)] = Parameters.gamma*Id4
           elif(Wannier_h.calculation_mode == 2):
-             for i in Parameters.nstm:
-                 for j in Parameters.nstm:
-                     gam1[4*(i-1):4*i,4*(j-1):4*j] = Parameters.gamma*Id4
+             for i in Parameters.up_nstm:
+                 for j in Parameters.up_nstm:
+                     gam1[4*(i-1)+0,4*(j-1)+0] = Parameters.gamma
+                     gam1[4*(i-1)+3,4*(j-1)+3] = Parameters.gamma
+             for i in Parameters.down_nstm:
+                 for j in Parameters.down_nstm:
+                     gam1[4*(i-1)+1,4*(j-1)+1] = Parameters.gamma
+                     gam1[4*(i-1)+2,4*(j-1)+2] = Parameters.gamma
 
           # Each orbital from NSUB is coupled to individual substrate orbitals (diagonal)
           if(Wannier_h.calculation_mode == 1):
-             for i in Parameters.nsub[1::2]: 
+             for i in Parameters.comb_nsub[1::2]: 
                    gam2[4*((i//2)-1):4*(i//2),4*((i//2)-1):4*(i//2)] = Parameters.frac*Parameters.gamma*Id4
           elif(Wannier_h.calculation_mode == 2):
-               for i in Parameters.nsub:
-                   gam2[4*(i-1):4*i,4*(i-1):4*i] = Parameters.frac*Parameters.gamma*Id4
+               for i in Parameters.up_nsub:
+                   gam2[4*(i-1)+0,4*(i-1)+0] = Parameters.frac*Parameters.gamma
+                   gam2[4*(i-1)+3,4*(i-1)+3] = Parameters.frac*Parameters.gamma
+               for i in Parameters.down_nsub:
+                   gam2[4*(i-1)+1,4*(i-1)+1] = Parameters.frac*Parameters.gamma
+                   gam2[4*(i-1)+2,4*(i-1)+2] = Parameters.frac*Parameters.gamma
 
           # Each WS overlap block has the same coupling matrix structure,
           # so we duplicate the individual blocks as kronecker products
           blockstructure=np.eye(Wannier_h.blocks, dtype=complex) # Block diagonal super matrix
           self.Gamma1 = np.kron(blockstructure,gam1)
           self.Gamma2 = np.kron(blockstructure,gam2)
-          #del gam1, gam2, blockstructure
 
       def compute_spectral_function(self,Parameters):
           self.w = np.linspace(-Parameters.vran, Parameters.vran, Parameters.vpts)
@@ -207,7 +209,6 @@ class TransportCalculation:
               self.transmission[i] = np.real(np.trace(self.Gamma1 @ A @ self.Gamma2 @ A.conj().T))
 
           np.savetxt(os.path.join(Parameters.outdir,'specdata.out'), np.array([self.w,self.spectral,self.transmission]).T, fmt=['%.8e', '%.8e', '%.8e'])
-          #del h, heff, Gamma1, Gamma2
    
       def solve_hamiltonian(self,Parameters):
           # Effective Hamiltonian (coupled system)
@@ -217,6 +218,7 @@ class TransportCalculation:
           logger('\n')
           logger('Diagonalization ...\n')
           self.eps, psil, psir = linalg.eig(self.heff, left=True, right=True)
+          np.savetxt(os.path.join(Parameters.outdir,'energy.out'), np.sort_complex(self.eps).view(float).reshape(-1, 2), fmt=['%.8e','%.8e'])
           overlap_lr = psil.conj().T @ psir
           invover_lr = np.linalg.inv(overlap_lr)
           overlap_rl = psir.conj().T @ psil
@@ -244,18 +246,20 @@ class TransportCalculation:
           else:
              Parameters.opt=2
              logger("%.2e = kT ~ min(|Im(eps)|) = %.2e => Entering finite-temperature calculation\n"%(1.0/Parameters.BETA,np.min(np.abs(np.imag(self.eps)))))
-          for i in range(len(self.voltage)):
-              if(Parameters.opt==0):
-                 self.current[i] = self.integral_original(self.voltage[i],0.0,Parameters.BETA)
-              elif(Parameters.opt==1):
-                 self.current[i] = self.integral_sparse(self.voltage[i],0.0,Parameters.BETA)
-              elif(Parameters.opt==2):
-                 self.current[i] = self.integral_contract(self.voltage[i],0.0,Parameters.BETA)
-              elif(Parameters.opt==3):
-                 self.current[i] = self.integralZeroTemp(self.voltage[i],0.0)
-              else:
-                 logger('\nIncompatible optimization flag, exiting.' + '\n')
-                 sys.exit(0) 
+
+          # for i in range(len(self.voltage)):
+          #     if(Parameters.opt==0):
+          #         self.current[i] = self.integral_original(self.voltage[i],0.0,Parameters.BETA)
+          #     elif(Parameters.opt==1):
+          #         self.current[i] = self.integral_sparse(self.voltage[i],0.0,Parameters.BETA)
+          #     elif(Parameters.opt==2):
+          #         self.current[i] = self.integral_contract(self.voltage[i],0.0,Parameters.BETA)
+          #     elif(Parameters.opt==3):
+          #         self.current[i] = self.integral_zerotemp(self.voltage[i],0.0)
+          #     else:
+          #         logger('\nIncompatible optimization flag, exiting.' + '\n')
+          #         sys.exit(0)
+
           # The above structure can be written perhaps more elegantly as below (for Python 3.10 onward)
           #    match opt:
           #        case 0:
@@ -268,12 +272,24 @@ class TransportCalculation:
           #            logger('\nIncompatible optimization flag, exiting.' + '\n')
           #            sys.exit(0)
 
+          if(Parameters.opt==0):
+              self.current = Parallel(n_jobs=cpu_count(), prefer="threads")(delayed(self.integral_original)(v,0.0,Parameters.BETA) for v in self.voltage)
+          elif(Parameters.opt==1):
+              self.current = Parallel(n_jobs=cpu_count(), prefer="threads")(delayed(self.integral_sparse)(v,0.0,Parameters.BETA) for v in self.voltage)
+          elif(Parameters.opt==2):
+              self.current = Parallel(n_jobs=cpu_count(), prefer="threads")(delayed(self.integral_contract)(v,0.0,Parameters.BETA) for v in self.voltage)
+          elif(Parameters.opt==3):
+              self.current = Parallel(n_jobs=cpu_count(), prefer="threads")(delayed(self.integral_zerotemp)(v,0.0) for v in self.voltage)
+          else:
+              logger('\nIncompatible optimization flag, exiting.' + '\n')
+              sys.exit(0)
+
           # Conductance is calculated as a derivative of the current w.r.t. voltage
           self.conductance = np.gradient(self.current, self.voltage[1]-self.voltage[0])
 
           np.savetxt(os.path.join(Parameters.outdir,'ivdata.out'), np.array([self.voltage,self.current,self.conductance]).T, fmt=['%.8e', '%.8e', '%.8e'])
 
-      def integral_original(self,V1, V2,BETA):
+      def integral_original(self, V1, V2, BETA):
           # Original result as a nested loop over eigenvalues
           csum = 0.0
           for i in range(len(self.eps)):
@@ -287,7 +303,7 @@ class TransportCalculation:
                     )
           return np.real(csum)
 
-      def integral_sparse(self,V1, V2,BETA):
+      def integral_sparse(self, V1, V2, BETA):
           # Nested loop replaced by a zipped loop over sparse matrix
           csum = 0.0
           for i,j,v in zip(self.GammaProd.row, self.GammaProd.col, self.GammaProd.data):
@@ -301,7 +317,7 @@ class TransportCalculation:
                           )
           return np.real(csum)
 
-      def integral_contract(self,V1, V2,BETA):
+      def integral_contract(self, V1, V2, BETA):
           # Explicit loops replaced by numpy broadcasting and array operations
           C = ((special.digamma(0.5+(BETA/(2.0j*np.pi))*(self.eps.conj()-V1))
                -special.digamma(0.5+(BETA/(2.0j*np.pi))*(self.eps.conj()-V2)))[:,None]
@@ -310,7 +326,7 @@ class TransportCalculation:
                )/(self.eps.conj()[:,None]-self.eps[None,:])
           return np.real(np.einsum('ij,ij,ji',self.Gamma1RR,C,self.Gamma2LL))
 
-      def integralZeroTemp(self, V1, V2):
+      def integral_zerotemp(self, V1, V2):
            # Digamma function replaced by log at the zero-temperature limit
            C = ((np.log(self.eps.conj()-V1)-np.log(self.eps.conj()-V2))[:,None] + \
                (np.log(self.eps-V2)-np.log(self.eps-V1))[None,:])/(self.eps.conj()[:,None]-self.eps[None,:])

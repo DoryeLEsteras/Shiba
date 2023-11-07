@@ -35,8 +35,12 @@ class ParameterManager:
       spec: int = 0          # Calculate spectral and transmision functions
       opt: int = 2           # Optimization
       plot: bool = True      # Make plots?
-      nstm: np.ndarray = np.array([])
-      nsub: np.ndarray = np.array([])
+      up_nstm: np.ndarray = np.array([])
+      down_nstm: np.ndarray = np.array([])
+      up_nsub: np.ndarray = np.array([])
+      down_nsub: np.ndarray = np.array([])
+      comb_nstm: np.ndarray = np.array([])
+      comb_nsub: np.ndarray = np.array([])
 
       # Files
       input_dir: str = ''
@@ -44,13 +48,17 @@ class ParameterManager:
       shiba_input: str = ''
       up_h: str = ''
       down_h: str = ''
-      noncolin_h: str = ''
-      stm: str = ''
-      sub: str = ''
+      comb_h: str = ''
+      up_stm: str = ''
+      down_stm: str = ''
+      up_sub: str = ''
+      down_sub: str = ''
+      comb_stm: str = ''
+      comb_sub: str = ''
 
       # Constants
       EVTOA: float = constants.eV**2/constants.hbar
-      BETA: float = 0.0
+      BETA: float = 100.0
       
       def extract_input_information(self) -> None:
           shiba_input_and_dir, self.outdir = parser()
@@ -59,19 +67,30 @@ class ParameterManager:
           if self.outdir == '':
              self.outdir = self.input_dir
           input_file = open(os.path.join(self.input_dir,self.shiba_input), 'r')
+          checkcomb=True
           for line_number, line in enumerate(input_file): 
             splitted_line = line.replace('\n','').replace(' ','').replace(',','').split('='); 
             if len(splitted_line) > 1:
-               if splitted_line[0].lower() == 'stm_file':
-                  self.stm = splitted_line[1]
-               if splitted_line[0].lower() == 'sub_file':
-                  self.sub = splitted_line[1]
+               if splitted_line[0].lower() == 'up_stm_file':
+                  self.up_stm = splitted_line[1]
+                  checkcomb=False
+               if splitted_line[0].lower() == 'down_stm_file':
+                  self.down_stm = splitted_line[1]
+               if splitted_line[0].lower() == 'up_sub_file':
+                  self.up_sub = splitted_line[1]
+               if splitted_line[0].lower() == 'down_sub_file':
+                  self.down_sub = splitted_line[1]
+               if splitted_line[0].lower() == 'comb_stm_file':
+                  self.comb_stm = splitted_line[1]
+                  checkcomb=True
+               if splitted_line[0].lower() == 'comb_sub_file':
+                  self.comb_sub = splitted_line[1]
                if splitted_line[0].lower() == 'up_h':
                   self.up_h = splitted_line[1]
                if splitted_line[0].lower() == 'down_h':
                   self.down_h = splitted_line[1]
-               if splitted_line[0].lower() == 'noncolin_h':
-                  self.noncolin_h = splitted_line[1]
+               if splitted_line[0].lower() == 'comb_h':
+                  self.comb_h = splitted_line[1]
                if splitted_line[0].lower() == 'mu':
                   self.mu = float(splitted_line[1])
                if splitted_line[0].lower() == 'delta':
@@ -102,6 +121,13 @@ class ParameterManager:
                      self.plot = True
                   elif splitted_line[1] in '1nN' or splitted_line[1].lower()== 'false':
                      self.plot = False
-          self.nstm = np.loadtxt(os.path.join(self.input_dir,self.stm),dtype=int,ndmin=1)
-          self.nsub = np.loadtxt(os.path.join(self.input_dir,self.sub),dtype=int,ndmin=1)
           self.BETA = 1.0/((constants.k/constants.eV)*self.temperature)
+          if(checkcomb):
+             self.comb_nstm = np.loadtxt(os.path.join(self.input_dir,self.comb_stm),dtype=int,ndmin=1)
+             self.comb_nsub = np.loadtxt(os.path.join(self.input_dir,self.comb_sub),dtype=int,ndmin=1)
+          else:
+             self.up_nstm = np.loadtxt(os.path.join(self.input_dir,self.up_stm),dtype=int,ndmin=1)
+             self.down_nstm = np.loadtxt(os.path.join(self.input_dir,self.down_stm),dtype=int,ndmin=1)
+             self.up_nsub = np.loadtxt(os.path.join(self.input_dir,self.up_sub),dtype=int,ndmin=1)
+             self.down_nsub = np.loadtxt(os.path.join(self.input_dir,self.down_sub),dtype=int,ndmin=1)
+
