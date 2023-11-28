@@ -1,0 +1,37 @@
+.. _tut0:
+
+Tutorial 0: SC substrate
+========================
+In this first tutorial, we will study the most simple case we can consider, a 2D superconductor in absence of magnetic species.
+DFT + Wannier calculations were performed in a monolayer of NbSe2 thus, the Wannier Hamiltonian contains all the data we require.
+(in this particular case we used a supercell to be consistent with the rest of the tutorials, where magnetic species are included
+around this structure, however, a unit cell of NbSe2 can be considered for this tutorial)
+
+First, this tutorial contains two different simulations. The first one includes spin-orbit coupling, thus there is one unique Hamiltonian 
+based in the spinor description. The second contains two different Hamiltonians, corresponding to the spin up and spin down Wannierizations.
+Depending on the colinear or noncolinear nature of simulations, you will need to specify the names of your files using 'up_h' and 'down_h' 
+options, or just using 'comb_h', you should not worry about anything else!
+
+
+.. code-block:: fortran
+
+    comb_h = nbse2.up_hr.dat     ! Example of a system with one unique Hamiltonian 
+
+.. code-block:: fortran
+
+    up_h = nbse2.up_hr.dat         ! Example of a system with separated spin up and spin down Hamiltonians
+    down_h = nbse2.down_hr.dat     
+   
+Together with the Wannier Hamiltonian, three inputs should be constructed, the main input of the simulations, and two lists of orbitals, 
+the one containing the orbitals connected to the STM tip and the ones contected to the other electrode. In this particular case, we have
+176 Wannier functions, the first 80 correspond to the d orbitals of the Nb atoms that are in the middle of the material. The next 96 Wannier functions
+correspond to the p orbitals of Se atoms, which belong to two groups (the two borders surfaces of the material). Herein, we construct the stm.in file 
+with the Se atoms in the top surface of NbSe2 and the sub.in file that contains the bottom surface orbitals. (is also possible to connect the stm tip to
+just one small group of p orbitals, something that in this particular case will not affect the results, but will slightly reduce the current and thus, the intensity
+of the peaks)
+
+Finally, the file input can be constracted using the tool create_shiba_template.py and choosing carefully the contents of the file (see How to use section to understand the different parameters).
+In this set of examples we highlight the value of delta extracted for NbSe2 superconductor (0.00135 meV), the parameters nc=2 was enough to converged the differential conductivity and that the value of voltage range
+(vran) provides a window containing the states close to the Fermi, where the SC gap will be opened.
+
+Observe how the value of Delta opens a SC gap in the spectrum, however there are no peaks inside of this gap given the absence of magnetic species around.
