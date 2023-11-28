@@ -5,8 +5,7 @@ Tutorials
 .. toctree::
     :maxdepth: 1
 
-    tut0_2H
-    tut0_1H
+    tut0
     tut1
     tut2
     tut3

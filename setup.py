@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-from Shiba import __version__,
+from Shiba import __version__
 
 __version__ = __version__
 
