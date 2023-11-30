@@ -26,7 +26,16 @@ or depending on your installation:
 
 .. code-block:: console
 
-   pip install CHECK_PACKAGE_NAME
+   pip3 install CHECK_PACKAGE_NAME
+
+Update Version 
+==============
+
+For updating the version of the code, upgrade using pip:
+
+.. code-block:: console
+
+   pip install CHECK_PACKAGE_NAME --upgrade
 
 Installing from source
 ======================
@@ -47,13 +56,4 @@ Start clonning the project to your machine:
 
 .. code-block:: console
 
-   pip install CHECK_PACKAGE_NAME
-
-Update Version 
-==============
-
-For updating the version of the code, upgrade using pip:
-
-.. code-block:: console
-
-   pip install CHECK_PACKAGE_NAME --upgrade
+   pip install .

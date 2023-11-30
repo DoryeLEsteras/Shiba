@@ -1,2 +1,6 @@
 task.*
 Shiba.egg-info
+bdist.* 
+lib
+scripts-*
+__pycache__
